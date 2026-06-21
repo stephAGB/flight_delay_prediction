@@ -38,10 +38,22 @@ env/
 Thumbs.db
 
 # Project Data and Artifacts
-data/
-artifacts/
+data/**
+!data/**/
+!data/**/*.dvc
+!data/**/.gitignore
+
+artifacts/**
+!artifacts/**/
+!artifacts/**/*.dvc
+!artifacts/**/.gitignore
 
 # Pytest / Coverage
 .pytest_cache/
 .coverage
 htmlcov/
+
+# MLflow
+mlflow.db
+mlruns/
+
