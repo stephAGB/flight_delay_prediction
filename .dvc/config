@@ -1,4 +1,4 @@
 [core]
-    remote = remote_data_repo
-['remote "remote_data_repo"']
-    url = gdrive://1Iax1anR_oR6kqGEMiNrxKLeIhzk3Or51
+    remote = origin-dvc
+['remote "origin-dvc"']
+    url = https://dagshub.com/stephAGB/flight_delay_prediction.dvc
