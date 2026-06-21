@@ -103,11 +103,12 @@ def train_model(data_path: str, model_path: str, n_estimators: int, max_depth: i
         joblib.dump(pipeline, model_path)
         
         # Log model to MLflow
-        print("Logging model artifact to MLflow...")
+        model_name = f"FlightDelayRandomForest_est{n_estimators}_depth{max_depth}_rs{random_state}"
+        print(f"Logging model artifact to MLflow and registering as '{model_name}'...")
         mlflow.sklearn.log_model(
             sk_model=pipeline,
             artifact_path="model",
-            registered_model_name="FlightDelayRandomForest"
+            registered_model_name=model_name
         )
         
         print(f"MLflow Run ID: {run.info.run_id}")
