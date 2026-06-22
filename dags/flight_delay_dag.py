@@ -48,7 +48,14 @@ default_args = {
 
 def run_preprocess(**kwargs):
     """Task 1: Preprocesses the raw flight delay data."""
+    import os
+    from airflow.exceptions import AirflowFailException
     from src.preprocessing.reduce_data import preprocess_data
+    
+    print(f"Checking if raw data file exists at {DATA_RAW}...")
+    if not os.path.exists(DATA_RAW):
+        raise AirflowFailException(f"Raw data file not found at: {DATA_RAW}")
+        
     print("Starting preprocessing...")
     preprocess_data(DATA_RAW, DATA_PROCESSED, sample_size=100000)
     print("Preprocessing completed.")

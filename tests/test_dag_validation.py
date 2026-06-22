@@ -28,7 +28,7 @@ import os
 import pytest
 import pandas as pd
 from unittest.mock import patch
-from dags.flight_delay_dag import run_validate_data
+from dags.flight_delay_dag import run_validate_data, run_preprocess
 
 def test_run_validate_data_success(tmp_path):
     # Create valid mock datasets with at least 1000 rows
@@ -108,3 +108,31 @@ def test_run_validate_data_fails_missing_column(tmp_path):
         with pytest.raises(MockAirflowFailException) as exc_info:
             run_validate_data()
         assert "missing columns" in str(exc_info.value)
+
+def test_run_preprocess_fails_missing_raw_file(tmp_path):
+    raw_path = tmp_path / "flights_missing.csv"
+    with patch('dags.flight_delay_dag.DATA_RAW', str(raw_path)):
+        with pytest.raises(MockAirflowFailException) as exc_info:
+            run_preprocess()
+        assert "Raw data file not found" in str(exc_info.value)
+
+def test_run_preprocess_success(tmp_path):
+    raw_path = tmp_path / "flights.csv"
+    proc_path = tmp_path / "processed.csv"
+    
+    raw_data = pd.DataFrame({
+        'MONTH': [1],
+        'DAY_OF_WEEK': [1],
+        'AIRLINE': ['AA'],
+        'DISTANCE': [100.0],
+        'ARRIVAL_DELAY': [10.0],
+        'DEPARTURE_DELAY': [5.0],
+        'CANCELLED': [0],
+        'DIVERTED': [0]
+    })
+    raw_data.to_csv(raw_path, index=False)
+    
+    with patch('dags.flight_delay_dag.DATA_RAW', str(raw_path)), \
+         patch('dags.flight_delay_dag.DATA_PROCESSED', str(proc_path)):
+        run_preprocess()
+        assert os.path.exists(proc_path)
