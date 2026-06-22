@@ -24,7 +24,11 @@ def client(mock_model):
 def test_health_check_healthy(client):
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "healthy", "model_loaded": True}
+    assert response.json() == {
+        "status": "healthy",
+        "model_loaded": True,
+        "message": "Model successfully loaded."
+    }
 
 def test_health_check_unhealthy():
     # Mock os.path.exists to return False so startup does not load any model
@@ -70,4 +74,49 @@ def test_predict_validation_error(client):
     }
     response = client.post("/predict", json=payload)
     assert response.status_code == 422 # Unprocessable Entity
+    
+    json_data = response.json()
+    assert json_data["error"] == "Validation Error"
+    assert "detail" in json_data
+    assert isinstance(json_data["detail"], list)
+    assert len(json_data["detail"]) > 0
+    # Check details format
+    for detail in json_data["detail"]:
+        assert "loc" in detail
+        assert "msg" in detail
+        assert "type" in detail
+
+def test_predict_service_unavailable():
+    # Mock os.path.exists to return False so startup does not load any model
+    with patch("os.path.exists", return_value=False):
+        with TestClient(src.api.app) as client_unhealthy:
+            src.api.model = None
+            payload = {
+                "MONTH": 6,
+                "DAY_OF_WEEK": 1,
+                "AIRLINE": "AA",
+                "DISTANCE": 1200.0,
+                "DEPARTURE_DELAY": 45.0
+            }
+            response = client_unhealthy.post("/predict", json=payload)
+            assert response.status_code == 503
+            assert response.json() == {
+                "error": "HTTP Error",
+                "message": "Model not loaded and not found on disk."
+            }
+
+def test_predict_prediction_error(client, mock_model):
+    mock_model.predict.side_effect = Exception("Prediction failed")
+    payload = {
+        "MONTH": 6,
+        "DAY_OF_WEEK": 1,
+        "AIRLINE": "AA",
+        "DISTANCE": 1200.0,
+        "DEPARTURE_DELAY": 45.0
+    }
+    response = client.post("/predict", json=payload)
+    assert response.status_code == 400
+    assert response.json()["error"] == "HTTP Error"
+    assert "Prediction error: Prediction failed" in response.json()["message"]
+
 
