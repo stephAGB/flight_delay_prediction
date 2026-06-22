@@ -1,0 +1,5 @@
+FROM apache/airflow:2.9.2-python3.12
+
+# Copy project requirements and install them inside the Airflow image
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt

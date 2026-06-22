@@ -5,7 +5,7 @@ services:
     build: .
     image: flight-delay-ml-base:latest
     container_name: mlflow-server
-    command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:////opt/mlflow/mlflow.db --default-artifact-root /opt/mlflow/artifacts
+    command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:////opt/mlflow/mlflow.db --artifacts-destination /opt/mlflow/artifacts --serve-artifacts
     ports:
       - "5000:5000"
     environment:
@@ -45,6 +45,27 @@ services:
       - MODEL_PATH=/app/artifacts/model.joblib
     volumes:
       - ./artifacts:/app/artifacts
+    depends_on:
+      - mlflow-server
+    restart: unless-stopped
+
+  airflow:
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
+    image: flight-delay-airflow:latest
+    container_name: airflow-server
+    command: standalone
+    ports:
+      - "8080:8080"
+    environment:
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - MLFLOW_TRACKING_URI=http://mlflow-server:5000
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./src:/opt/airflow/src
+      - ./data:/opt/airflow/data
+      - ./artifacts:/opt/airflow/artifacts
     depends_on:
       - mlflow-server
     restart: unless-stopped
