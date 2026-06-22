@@ -69,3 +69,35 @@ Exécutez la suite de tests automatisés :
 ```bash
 pytest tests/
 ```
+
+## Gestion des données (DVC & DAGsHub)
+
+Les données volumineuses et les modèles du projet ne sont pas versionnés sur Git. Ils sont suivis par DVC et hébergés sur le stockage distant de **DAGsHub**.
+
+### Récupérer les données (Collaborateurs)
+
+1. **Si le dépôt est Public** :
+   Exécutez simplement la commande suivante à la racine :
+   ```bash
+   dvc pull
+   ```
+
+2. **Si le dépôt est Privé** :
+   Vous devez d'abord être membre du dépôt sur DAGsHub et configurer vos accès personnels en local (dans votre config locale DVC qui n'est pas suivie par Git) :
+   ```bash
+   dvc remote modify origin-dvc --local auth basic
+   dvc remote modify origin-dvc --local user VOTRE_PSEUDO_DAGSHUB
+   dvc remote modify origin-dvc --local password VOTRE_TOKEN_DAGSHUB
+   ```
+   Puis téléchargez les fichiers :
+   ```bash
+   dvc pull
+   ```
+
+### Pousser des données (Pour mettre à jour le stockage)
+Si vous ajoutez ou modifiez des fichiers de données locaux suivis par DVC (par exemple avec `dvc add data/raw/flights.csv`), poussez les fichiers physiques sur DAGsHub avec :
+```bash
+dvc push
+```
+*(Vos identifiants locaux configurés ci-dessus seront utilisés pour l'autorisation).*
+

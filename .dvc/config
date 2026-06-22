@@ -1,0 +1,4 @@
+[core]
+    remote = origin-dvc
+['remote "origin-dvc"']
+    url = https://dagshub.com/stephAGB/flight_delay_prediction.dvc
