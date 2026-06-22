@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  mlflow-server:
+    build: .
+    image: flight-delay-ml-base:latest
+    container_name: mlflow-server
+    command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:////opt/mlflow/mlflow.db --default-artifact-root /opt/mlflow/artifacts
+    ports:
+      - "5000:5000"
+    environment:
+      - MLFLOW_SERVER_ALLOWED_HOSTS=*
+    volumes:
+      - mlflow_db:/opt/mlflow
+      - mlflow_artifacts:/opt/mlflow/artifacts
+    restart: unless-stopped
+
+  preprocessing:
+    image: flight-delay-ml-base:latest
+    container_name: preprocessing-job
+    command: python src/preprocessing/reduce_data.py --sample-size 100000
+    volumes:
+      - ./data:/app/data
+
+  train:
+    image: flight-delay-ml-base:latest
+    container_name: train-job
+    command: python src/train.py --n-estimators 50 --max-depth 8 --random-state 42
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow-server:5000
+    volumes:
+      - ./data:/app/data
+      - ./artifacts:/app/artifacts
+    depends_on:
+      - mlflow-server
+
+  api:
+    image: flight-delay-ml-base:latest
+    container_name: flight-delay-api
+    command: uvicorn src.api:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8001:8000"
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow-server:5000
+      - MODEL_PATH=/app/artifacts/model.joblib
+    volumes:
+      - ./artifacts:/app/artifacts
+    depends_on:
+      - mlflow-server
+    restart: unless-stopped
+
+volumes:
+  mlflow_db:
+  mlflow_artifacts:

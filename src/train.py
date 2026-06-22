@@ -37,7 +37,8 @@ def run_training_pipeline(data_path: str, model_path: str, n_estimators: int, ma
     X_train, X_test, y_train, y_test = load_and_split_data(data_path, random_state)
     
     # Configure MLflow
-    mlflow.set_tracking_uri("sqlite:///mlflow.db")
+    tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "sqlite:///mlflow.db")
+    mlflow.set_tracking_uri(tracking_uri)
     mlflow.set_experiment("Flight_Delay_Prediction")
     
     with mlflow.start_run() as run:
