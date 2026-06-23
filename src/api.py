@@ -8,10 +8,29 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from pydantic import BaseModel, Field
 import pandas as pd
 import joblib
+import logging
+from collections import deque
 
 # Global variables for model
 MODEL_PATH = os.getenv("MODEL_PATH", "artifacts/model.joblib")
 model = None
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
+logger = logging.getLogger(__name__)
+
+metrics = {
+    "total_predictions": 0,
+    "positive_predictions": 0,
+    "negative_predictions": 0,
+    "anomalies_detected": 0,
+    "drift_detected": False
+}
+
+recent_distances = deque(maxlen=100)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -130,6 +149,10 @@ def health():
         message="Model successfully loaded."
     )
 
+@app.get("/metrics")
+def get_metrics():
+    return metrics
+
 @app.post(
     "/predict",
     response_model=PredictResponse,
@@ -161,6 +184,7 @@ def health():
 )
 def predict(flight: FlightInput):
     global model
+    logger.info("Prediction request received")
     # Reload model if it was not loaded yet but now exists
     if model is None:
         if os.path.exists(MODEL_PATH):
@@ -171,6 +195,11 @@ def predict(flight: FlightInput):
         else:
             raise HTTPException(status_code=503, detail="Model not loaded and not found on disk.")
             
+    if flight.DISTANCE > 5000:
+        metrics["anomalies_detected"] += 1
+        logger.warning(
+            f"Anomaly detected: distance={flight.DISTANCE}"
+        )
     # Format input data as DataFrame
     input_dict = {
         'MONTH': [flight.MONTH],
@@ -180,17 +209,39 @@ def predict(flight: FlightInput):
         'DEPARTURE_DELAY': [flight.DEPARTURE_DELAY]
     }
     input_df = pd.DataFrame(input_dict)
+
+    recent_distances.append(flight.DISTANCE)
+
+    if len(recent_distances) == 100:
+        mean_distance = sum(recent_distances) / len(recent_distances)
+
+        if mean_distance > 3000:
+            metrics["drift_detected"] = True
+
+            logger.warning(
+                f"Potential drift detected: mean distance={mean_distance}"
+            )
     
     try:
         prediction = int(model.predict(input_df)[0])
         probability = float(model.predict_proba(input_df)[0][1])
         
+        metrics["total_predictions"] += 1
+        logger.info(
+            f"Prediction={prediction}, probability={probability}"
+        )
+        if prediction == 1:
+            metrics["positive_predictions"] += 1
+        else:
+            metrics["negative_predictions"] += 1
+
         return PredictResponse(
             prediction=prediction,
             probability_delayed=probability,
             delayed=(prediction == 1)
         )
     except Exception as e:
+        logger.error(str(e))
         raise HTTPException(status_code=400, detail=f"Prediction error: {str(e)}")
 
 
