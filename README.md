@@ -1,4 +1,5 @@
 # Flight Delay Prediction - Architecture Classique ML
+** Projet réalisé en binôme : Stéphanie AGBANGLANON et Assa KEBE **
 
 Ce projet implémente un pipeline de prédiction de retards de vols avec une architecture de projet Machine Learning classique et modulaire.
 
@@ -6,6 +7,11 @@ Ce projet implémente un pipeline de prédiction de retards de vols avec une arc
 
 ```text
 flight_delay_prediction/
+├── dags/                    # Orchestration des pipelines 
+│   └── flight_delay_dag.py  # DAG Airflow (Preprocess, Validate, Train) 
+├── .github/
+│   └── workflows/
+│       └── ci.yml           # Workflow GitHub Actions (CI) 
 ├── data/                    # Répertoire pour les données
 │   ├── raw/                 # Données brutes
 │   └── processed/           # Données préparées pour l'entraînement
