@@ -79,6 +79,11 @@ uvicorn src.api:app --reload
 ```
 Accédez à l'interface Swagger pour tester les requêtes à l'adresse suivante : http://127.0.0.1:8000/docs.
 
+L'API expose les points d'accès suivants :
+* **`POST /predict`** : Soumet les caractéristiques d'un vol pour obtenir une prédiction (1 si retard > 15 min, sinon 0) et les probabilités de retard.
+* **`GET /health`** : Indique l'état de l'API et si le modèle de prédiction est chargé.
+* **`GET /metrics`** : Renvoie les métriques collectées en direct (nombre total de prédictions, répartition des retards/vols à l'heure, anomalies de distance supérieure à 5000 miles, et statut de dérive/drift).
+
 ### 4. Tests
 Exécutez la suite de tests automatisés :
 ```bash
