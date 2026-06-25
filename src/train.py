@@ -1,6 +1,10 @@
 import argparse
 import sys
 import os
+from dotenv import load_dotenv
+
+# Load variables from .env file if it exists
+load_dotenv()
 
 # Add the project root to the python path to support running this file directly
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

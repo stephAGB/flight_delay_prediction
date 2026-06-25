@@ -1,5 +1,10 @@
 import os
 import sys
+from dotenv import load_dotenv
+
+# Load variables from .env file if it exists
+load_dotenv()
+
 # Ensure Airflow can resolve packages from the project root directory
 sys.path.append('/opt/airflow')
 

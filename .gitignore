@@ -57,3 +57,6 @@ htmlcov/
 mlflow.db
 mlruns/
 
+# Environment variables / Secrets
+.env
+

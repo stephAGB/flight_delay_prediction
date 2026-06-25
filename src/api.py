@@ -1,4 +1,9 @@
 import os
+from dotenv import load_dotenv
+
+# Load variables from .env file if it exists
+load_dotenv()
+
 from contextlib import asynccontextmanager
 from typing import List, Optional
 from fastapi import FastAPI, HTTPException

@@ -42,6 +42,15 @@ flight_delay_prediction/
    pip install -r requirements.txt
    ```
 
+3. Configurer le fichier d'environnement `.env` :
+   Copiez le fichier `.env.example` pour créer votre propre fichier `.env` et mettez-y vos secrets (tokens, mots de passe) :
+   ```bash
+   # Linux/macOS :
+   cp .env.example .env
+   # Windows (PowerShell) :
+   copy .env.example .env
+   ```
+
 ## Utilisation
 
 ### 1. Prétraitement / Réduction des données
@@ -83,12 +92,34 @@ Les données volumineuses et les modèles du projet ne sont pas versionnés sur 
    ```
 
 2. **Si le dépôt est Privé** :
-   Vous devez d'abord être membre du dépôt sur DAGsHub et configurer vos accès personnels en local (dans votre config locale DVC qui n'est pas suivie par Git) :
+   Vous devez d'abord être membre du dépôt sur DAGsHub. Pour configurer vos accès personnels en local sans exposer vos identifiants, chargez les variables depuis le fichier `.env` :
+
+   **Sur Linux/macOS :**
    ```bash
+   # Charger les variables du .env
+   export $(grep -v '^#' .env | xargs)
+
+   # Configurer DVC avec les variables d'environnement
    dvc remote modify origin-dvc --local auth basic
-   dvc remote modify origin-dvc --local user VOTRE_PSEUDO_DAGSHUB
-   dvc remote modify origin-dvc --local password VOTRE_TOKEN_DAGSHUB
+   dvc remote modify origin-dvc --local user $DAGSHUB_USERNAME
+   dvc remote modify origin-dvc --local password $DAGSHUB_TOKEN
    ```
+
+   **Sur Windows (PowerShell) :**
+   ```powershell
+   # Charger les variables du .env dans la session
+   Get-Content .env | Foreach-Object {
+       if ($_ -match '^(?<name>[^#\s=]+)\s*=\s*(?<value>.*)$') {
+           [System.Environment]::SetEnvironmentVariable($Matches.name, $Matches.value.Trim(), "Process")
+       }
+   }
+
+   # Configurer DVC avec les variables d'environnement
+   dvc remote modify origin-dvc --local auth basic
+   dvc remote modify origin-dvc --local user $env:DAGSHUB_USERNAME
+   dvc remote modify origin-dvc --local password $env:DAGSHUB_TOKEN
+   ```
+
    Puis téléchargez les fichiers :
    ```bash
    dvc pull

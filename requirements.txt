@@ -8,3 +8,4 @@ httpx==0.28.1
 mlflow==3.14.0
 joblib==1.5.3
 dill==0.3.8
+python-dotenv==1.0.1

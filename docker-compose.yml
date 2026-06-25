@@ -27,7 +27,9 @@ services:
     container_name: train-job
     command: python src/train.py --n-estimators 50 --max-depth 8 --random-state 42
     environment:
-      - MLFLOW_TRACKING_URI=http://mlflow-server:5000
+      - MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI:-http://mlflow-server:5000}
+      - MLFLOW_TRACKING_USERNAME=${MLFLOW_TRACKING_USERNAME}
+      - MLFLOW_TRACKING_PASSWORD=${MLFLOW_TRACKING_PASSWORD}
     volumes:
       - ./data:/app/data
       - ./artifacts:/app/artifacts
@@ -41,8 +43,10 @@ services:
     ports:
       - "8001:8000"
     environment:
-      - MLFLOW_TRACKING_URI=http://mlflow-server:5000
-      - MODEL_PATH=/app/artifacts/model.joblib
+      - MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI:-http://mlflow-server:5000}
+      - MODEL_PATH=${MODEL_PATH:-/app/artifacts/model.joblib}
+      - MLFLOW_TRACKING_USERNAME=${MLFLOW_TRACKING_USERNAME}
+      - MLFLOW_TRACKING_PASSWORD=${MLFLOW_TRACKING_PASSWORD}
     volumes:
       - ./artifacts:/app/artifacts
     depends_on:
@@ -60,7 +64,9 @@ services:
       - "8080:8080"
     environment:
       - AIRFLOW__CORE__LOAD_EXAMPLES=False
-      - MLFLOW_TRACKING_URI=http://mlflow-server:5000
+      - MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI:-http://mlflow-server:5000}
+      - MLFLOW_TRACKING_USERNAME=${MLFLOW_TRACKING_USERNAME}
+      - MLFLOW_TRACKING_PASSWORD=${MLFLOW_TRACKING_PASSWORD}
     volumes:
       - ./dags:/opt/airflow/dags
       - ./src:/opt/airflow/src
